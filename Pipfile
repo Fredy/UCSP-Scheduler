@@ -9,6 +9,7 @@ name = "pypi"
 
 tabula-py = "*"
 django = "*"
+ipython = "*"
 
 
 [dev-packages]
