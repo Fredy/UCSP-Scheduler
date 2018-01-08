@@ -34,22 +34,27 @@ def extract_schedules(path_name):
     area_schedule = (6.833, 70.959, 424.179, 824.706)
 
     raw_schedules = read_pdf(path_name, pages='all', multiple_tables=True,
-                             spreadsheet=True, silent=True, guess=False,
+                             lattice=True, silent=True, guess=False,
                              area=area_schedule)
-    format_schedules = []
 
     valid_data = [True] * len(raw_schedules)
 
     # If sch is a schedule, then we format it and add it to format_schedules
     # else it is marked as incorrect in valid_data.
     for i, sch in enumerate(raw_schedules):
-        if not sch.empty and sch.iloc[0][0] and sch.iloc[0][0] == "LUNES":
-            format_schedules.append(sch.drop(sch.index[[1, 3, 5, 7, 9, 11]],
-                                             axis=1))
+        if not sch.empty and sch.iloc[0, 0] and sch.iloc[0, 0] == "LUNES":
+            sch.drop(sch.index[[1, 3, 5, 7, 9, 11]], axis=1, inplace=True)
         else:
             valid_data[i] = False
 
-    return format_schedules, valid_data
+    for sch in raw_schedules:
+        sch.drop(0, inplace=True)
+        # Reset indexes is not necessary, all the access operations must be done
+        # using .iloc[rows, columns]
+        # sch.columns = [i for i in range(sch.shape[1])]
+        # sch.reset_index(inplace=True, drop=True)
+
+    return raw_schedules, valid_data
 
 def extract_data(path_name, valid_pages):
     """
@@ -90,10 +95,27 @@ def extract_data(path_name, valid_pages):
         for i, data in zip(only_data_pages, raw_data_tmp):
             raw_data.insert(i - 1, data)
 
+    for data in raw_data:
+        data.drop(0, inplace=True)
+        data.dropna(axis=1, how='all', inplace=True)
+
+        # GROUP and TYPE separated
+        data.insert(2, 't', float('nan'))
+
+        for i in range(data.shape[0] - 1):
+            data.iloc[i, 1], data.iloc[i, 2] = data.iloc[i, 1].split(' ')
+
+        # TEORY and PRACTICE teachers separated
+        # TODO: IMPORTANT: some courses have more than 2 teachers!!!
+        # TODO: instead creting a new column, store all the teachers in a list
+        data.insert(6, 'p', float('nan'))
+        for i in range(data.shape[0] - 1):
+            tmp = data.iloc[i, 5].split(', ')
+            if len(tmp) == 2:
+                data.iloc[i, 5] = tmp[1]
+                data.iloc[i, 6] = tmp[0]
+
     return raw_data
-
-
-
 
 def extract_all(path_name):
     """
@@ -105,6 +127,5 @@ def extract_all(path_name):
         the related data. Both are pandas's DataFrame.
     """
 
-    # TODO: check this areas
     # TODO: format raw_schdata, then verify if the data correspond with the
     # schedule, for this use correct_info
