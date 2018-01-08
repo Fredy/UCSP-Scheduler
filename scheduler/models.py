@@ -6,8 +6,16 @@ class Career(models.Model):
     def __str__(self):
         return self.name
 
+class CourseType(models.Model):
+    name = models.CharField(max_length=20)
+    code = models.CharField(max_length=5)
+
+    def __str__(self):
+        return "{} ({})".format(self.name, self.code)
+
 class Course(models.Model):
     career = models.ForeignKey(Career, on_delete=models.CASCADE)
+    ctype = models.ForeignKey(CourseType, on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
     credits = models.IntegerField()
     semester = models.IntegerField()
@@ -15,13 +23,6 @@ class Course(models.Model):
 
     def __str__(self):
         return self.name
-
-class CourseType(models.Model):
-    name = models.CharField(max_length=20)
-    code = models.CharField(max_length=5)
-
-    def __str__(self):
-        return "{} ({})".format(self.name, self.code)
 
 class Teacher(models.Model):
     first_name = models.CharField(max_length=20)
