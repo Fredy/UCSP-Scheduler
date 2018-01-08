@@ -10,6 +10,7 @@ name = "pypi"
 tabula-py = "*"
 django = "*"
 ipython = "*"
+mysqlclient = "*"
 
 
 [dev-packages]
